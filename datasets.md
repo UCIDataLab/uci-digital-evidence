@@ -39,7 +39,7 @@ This dataset was collected via the Twitter Streaming API and consists of ~80,000
 
 References:
 
-* <a href="https://github.com/rlongjohn/test-website/tree/main/twitter_data">Dataset page</a> (Note that per Twitter's API use policy only the Tweet IDs can be shared)
+* <a href="https://github.com/UCIDataLab/uci-digital-evidence/tree/main/twitter_data">Dataset page</a> (Note that per Twitter's API use policy only the Tweet IDs can be shared)
 * <a href="https://developer.twitter.com/en/docs/twitter-api/v1/tweets/filter-realtime/overview">Twitter Streaming API</a>
 * <a href="https://developer.twitter.com/en/developer-terms/agreement-and-policy">Twitter API use policy</a>
 
