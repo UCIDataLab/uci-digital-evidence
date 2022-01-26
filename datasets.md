@@ -9,6 +9,8 @@ Below is a list of real-world datasets relevant to digital evidence that are use
 1. [Email communications](#email-communication)
 2. [Mobile app usage](#mobile-app-usage)
 3. [Device location pings](#device-location-pings)
+4. [Web browsing](#web-browsing)
+5. [Authentication](#authentication)
 
 ### Email communications
 
@@ -39,9 +41,37 @@ This dataset was collected via the Twitter Streaming API and consists of ~80,000
 
 References:
 
-* <a href="https://github.com/UCIDataLab/uci-digital-evidence/tree/main/twitter_data">Dataset page</a> (Note that per Twitter's API use policy only the Tweet IDs can be shared)
+* <a href="https://github.com/rlongjohn/test-website/tree/main/twitter_data">Dataset page</a> (Note that per Twitter's API use policy only the Tweet IDs can be shared)
 * <a href="https://developer.twitter.com/en/docs/twitter-api/v1/tweets/filter-realtime/overview">Twitter Streaming API</a>
 * <a href="https://developer.twitter.com/en/developer-terms/agreement-and-policy">Twitter API use policy</a>
 
+### Web browsing
 
+This dataset comes from an observational study conducted at a large U.S. university and consists of ~90,000 records of web browsing events from 55 students. Each web browsing event (a row in the dataset) consists is of the form `<id, m, t>` where the ID corresponds to the student, m indicates whether or not the event was a Facebook-browser event (2 indicates a Facebook event and 1 indicates a non-Facebook event), and t denotes the timestamp.
+
+References:
+
+* Data available <a href="https://github.com/UCIDataLab/assocr">here</a>. (Note that the data is including in the _student_web_browsing_ folder of the data file.)
+* <a href="https://doi.org/10.1111/rssa.12549">CSAFE paper using this data</a>:
+
+>Galbraith, Christopher, Padhraic Smyth, and Hal S. Stern. "Quantifying the association between discrete event time series with applications to digital forensics." Journal of the Royal Statistical Society: Series A (Statistics in Society) 183.3 (2020): 1005-1027.
+
+* <a href="https://doi.org/10.1145/2675133.2675271">Canonical paper for dataset</a>:
+
+>Wang, Yiran, et al. "Coming of Age (Digitally) An Ecological View of Social Media Use among College Students." Proceedings of the 18th ACM conference on computer supported cooperative work & social computing. 2015.
+
+### Authentication
+
+This dataset is composed of ~850 authentication events from two users successfully authenticating into computers on the Los Alamos National Laboratory enterprise network. Each event is of the form `<t, id, cid>` where t is the timestamp of the authentication event, the ID identifies the user account, and the CID identifies the computer logged into by the user.
+
+References:
+
+* Data available <a href="https://github.com/UCIDataLab/assocr">here</a>. (Note that the data is including in the _lanl_ folder of the data file.)
+* <a href="https://doi.org/10.1111/rssa.12549">CSAFE paper using this data</a>:
+
+>Galbraith, Christopher, Padhraic Smyth, and Hal S. Stern. "Quantifying the association between discrete event time series with applications to digital forensics." Journal of the Royal Statistical Society: Series A (Statistics in Society) 183.3 (2020): 1005-1027.
+
+* Canonical reference for this dataset:
+
+>Kent, Alexander D. "User-computer authentication associations in time." Los Alamos National Laboratory (2014).
 
