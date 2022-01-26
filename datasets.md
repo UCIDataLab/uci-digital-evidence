@@ -47,11 +47,11 @@ References:
 
 ### Web browsing
 
-This dataset comes from an observational study conducted at a large U.S. university and consists of ~90,000 records of web browsing events from 55 students. Each web browsing event (a row in the dataset) consists is of the form `<id, m, t>` where the ID corresponds to the student, m indicates whether or not the event was a Facebook-browser event (2 indicates a Facebook event and 1 indicates a non-Facebook event), and t denotes the timestamp.
+This dataset comes from an observational study conducted at a large U.S. university and consists of ~90,000 records of web browsing events from 55 students. Each web browsing event (a row in the dataset) is of the form `<id, m, t>` where the ID corresponds to the student, m indicates whether or not the event was a Facebook-browser event (2 indicates a Facebook event and 1 indicates a non-Facebook event), and t denotes the timestamp.
 
 References:
 
-* Data available <a href="https://github.com/UCIDataLab/assocr">here</a>. (Note that the data is including in the _student_web_browsing_ folder of the data file.)
+* Data available <a href="https://github.com/UCIDataLab/assocr">here</a>. (Note that the data is included in the _student_web_browsing_ folder of the data file.)
 * <a href="https://doi.org/10.1111/rssa.12549">CSAFE paper using this data</a>:
 
 >Galbraith, Christopher, Padhraic Smyth, and Hal S. Stern. "Quantifying the association between discrete event time series with applications to digital forensics." Journal of the Royal Statistical Society: Series A (Statistics in Society) 183.3 (2020): 1005-1027.
@@ -66,7 +66,7 @@ This dataset is composed of ~850 authentication events from two users successful
 
 References:
 
-* Data available <a href="https://github.com/UCIDataLab/assocr">here</a>. (Note that the data is including in the _lanl_ folder of the data file.)
+* Data available <a href="https://github.com/UCIDataLab/assocr">here</a>. (Note that the data is included in the _lanl_ folder of the data file.)
 * <a href="https://doi.org/10.1111/rssa.12549">CSAFE paper using this data</a>:
 
 >Galbraith, Christopher, Padhraic Smyth, and Hal S. Stern. "Quantifying the association between discrete event time series with applications to digital forensics." Journal of the Royal Statistical Society: Series A (Statistics in Society) 183.3 (2020): 1005-1027.
