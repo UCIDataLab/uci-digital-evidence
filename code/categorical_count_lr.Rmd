@@ -1,0 +1,237 @@
+---
+title: Sample Code for Likelihood Ratios for Categorical Count Data
+output: rmarkdown::github_document
+---
+
+## LR under the proposed model
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Recall that the formula for the likelihood ratio under the proposed model is
+
+<p align="center">
+<img src="lr_formula.png" width="300">
+</p>
+where $B(.)$ denotes the multivariate beta function.
+The multivariate beta function is defined as
+
+<p align="center">
+<img src="mv_beta.png" width="250">
+</p>
+
+## Functions for computing the LR
+
+* `calc_lnlr` calculates the natural log transformed likelihood ratio for a given set of prior parameters and pair of counts. This just implements the formula above (on the natural log scale for stability).
+* `get_lnlr_from_seq` calculates natural log transformed likelihood ratios for a given set of prior parameters and sequence of events. This could be provided via two sequences to compare or a single sequence with a dividing event index. Can also be provided with a window of event indices around which to do the calculations, instead of for a fixed dividing time.
+
+```{r calc-lnlr}
+
+# Calculate the ln(LR) for a given pair of counts and prior
+#
+# alpha: vector of length K containing the Dirichlet prior parameters
+# r1: vector of length K containing the event counts for the known source
+# r2: vector of length K containing the event counts for the unknown source
+#
+calc_lnlr <- function(r1, r2, alpha = NA) {
+  
+  if(length(r1) != length(r2)) {
+    stop("Different K's implied by r1 and r2.")
+  }
+  
+  if (sum(is.na(alpha)) == 0) {
+    
+    if (length(alpha) != length(r1)) {
+      stop("Different K's implied by alpha and r1.")
+    }
+    
+    if (sum(alpha <= 0) > 0) {
+      stop("All prior parameters need to be greater than 0.")
+    }
+    
+  } else {
+    alpha <- rep(1, length(r1))
+  }
+  
+  sum(lgamma(alpha + r1 + r2)) - lgamma(sum(alpha + r1 + r2)) - 
+    sum(lgamma(alpha + r1)) + lgamma(sum(alpha + r1)) - 
+    sum(lgamma(alpha + r2)) + lgamma(sum(alpha + r2)) + 
+    sum(lgamma(alpha)) - lgamma(sum(alpha))
+}
+
+```
+
+```{r get-lr-from-seq}
+
+# Calculate the ln(LR) for a given sequence of events
+#
+# event_seq: vector containing a sequence of events
+#   - if event_seq2 is also specified, then event_seq consists of only the known
+#     source events (N_1 events) and then event_seq2 will have the unknown 
+#     source events (N_2 events)
+#   - if event_seq2 is not also specified, then this event sequence has all N
+#     events and will be split up into N_1 + N_2 events
+# event_seq2: optional vector containing the unknown source events
+#   - will be used to compare against event_seq
+# event_ind: either a single integer or a vector of integers specifying the  
+#             event indices (i.e., N_1's) at which to calculate the LR
+#   - if not specified with a single sequence, defaults to floor of N / 2
+#   - if not specified with two sequences, defaults to just comparing the two
+#     sequences
+#   - if specified as a single integer, function will return a single LR value
+#   - if specified as a vector, function will return a vector of LR values
+# categories: vector of length K specifying the LR categories
+#   - if not specified, defaults to the event types in event_seq
+#   - note that if specified, events in event_seq not in these categories will 
+#     be ignored
+# alpha: vector of length K containing the Dirichlet prior parameters
+#   - if not specified, defaults to uniform Dirichlet
+#
+get_lnlr_from_seq <- function(event_seq,
+                              event_seq2 = NA,
+                              event_ind = NA,
+                              categories = NA,
+                              alpha = NA) {
+  
+  event_seq <- c(event_seq, event_seq2)
+  
+  if(sum(is.na(categories)) == 0){
+    event_seq <- factor(event_seq, levels = categories)
+    
+  } else {
+    event_seq <- factor(event_seq)
+  }
+  
+  event_seq <- event_seq[!is.na(event_seq)]
+  K <- length(levels(event_seq))
+  N <- length(event_seq)
+  
+  if(sum(is.na(alpha)) == 0) {
+    
+    if (length(alpha) != K) {
+      stop("The number of prior parameters is not equal to the number of categories.")
+    }
+    
+    if (sum(alpha <= 0) > 0) {
+      stop("All prior parameters need to be greater than 0.")
+    }
+    
+  } else {
+    alpha <- rep(1, K)
+  }
+  
+  if (sum(is.na(event_ind)) == 0) {
+    
+    if(sum(event_ind < 1) > 0) {
+      stop("There are event indices less than 1.")
+    }
+    
+    if(sum(event_ind > (N - 1)) > 0) {
+      stop("There are event indices greater than the length of the event sequence.")
+    }
+  } else {
+    
+    if (sum(is.na(event_seq2)) == 0) {
+      event_ind <- N - length(event_seq2)
+    } else {
+      event_ind <- floor(N / 2)
+    }
+    
+  }
+  
+  lnlr <- rep(NA, length(event_ind))
+  
+  for(i in 1:length(event_ind)) {
+    r1 <- table(event_seq[1:event_ind[i]])
+    r2 <- table(event_seq[(event_ind[i] + 1):N])
+    lnlr[i] <- calc_lnlr(r1, r2, alpha)
+  }
+  
+  lnlr
+  
+}
+
+```
+
+## Toy examples
+
+```{r}
+set.seed(NULL)
+set.seed(1234)
+```
+
+Let's consider three event types of interest, "A", "B", and "C".
+
+```{r}
+toy_categories <- c("A", "B", "C")
+```
+
+Suppose we have identical event counts, $r_1 = r_2 = (2, 1, 0)$.
+We can use the `calc_lnlr` function in order to calculate the likelihood ratio using these counts directly.
+
+```{r}
+exp(calc_lnlr(
+  alpha = c(1, 1, 1),
+  r1 = c(2, 1, 0), 
+  r2 = c(2, 1, 0))
+)
+```
+
+We could also represent these counts as two sequences and then calculate the likelihood ratio.
+
+```{r}
+exp(get_lnlr_from_seq(
+  event_seq = c("A", "A", "B"),
+  event_seq2 = c("A", "A", "B"),
+  categories = toy_categories)
+)
+```
+
+Or alternatively as a single sequence with a specified dividing index.
+
+```{r}
+exp(get_lnlr_from_seq(
+  event_seq = rep(c("A", "A", "B"), 2),
+  categories = toy_categories,
+  event_ind = 3)
+)
+```
+
+We could also evaluate the likelihood ratio throughout a window of events in the sequence, instead of only at a fixed event index.
+The function below calculates the likelihood ratio three times on the sequence: "A", "A", "B", "A", "A", "B".
+
+* A, A VS. B, A, A, B
+* A, A, B VS. A, A, B
+* A, A, B, A, VS. A, B
+
+```{r}
+exp(get_lnlr_from_seq(
+  event_seq = rep(c("A", "A", "B"), 2),
+  categories = toy_categories,
+  event_ind = c(2, 3, 4))
+)
+```
+
+We can also do this for a longer sequence and then plot the resulting likelihood ratios across the event indices.
+We construct a sequence of 1000 events; the first 500 will be mostly "A" events and then there's a change and the second 500 events will be mostly "C" events.
+Ideally, the likelihood ratio demonstrates that there is a change around the 500th event.
+
+```{r lr_plot}
+long_seq <- c(
+  toy_categories[sample(seq(3), size = 500, prob = c(0.9, 0.05, 0.05), replace = TRUE)],
+  toy_categories[sample(seq(3), size = 500, prob = c(0.05, 0.05, 0.9), replace = TRUE)]
+)
+
+lnlr <- get_lnlr_from_seq(
+  event_seq = long_seq,
+  categories = toy_categories,
+  event_ind = seq(1, 999)
+)
+
+plot(seq(1, 999), lnlr, type = "l", lwd = 2, xlab = "Event index", ylab = "ln(LR)")
+abline(v = 500, lwd = 2, col = "red")
+```
+
+
+
