@@ -1,0 +1,259 @@
+<h2 id="lr-under-the-proposed-model">LR under the proposed model</h2>
+
+<p>Recall that the formula for the likelihood ratio under the proposed
+model is</p>
+
+<p align="center">
+<img src="lr_formula.png" width="300" />
+</p>
+
+<p>where <em>B</em>(.) denotes the multivariate beta function. The multivariate
+beta function is defined as</p>
+
+<p align="center">
+<img src="mv_beta.png" width="250" />
+</p>
+
+<h2 id="functions-for-computing-the-lr">Functions for computing the LR</h2>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">calc_lnlr</code> calculates the natural log transformed likelihood ratio
+for a given set of prior parameters and pair of counts. This just
+implements the formula above (on the natural log scale for
+stability).</li>
+  <li><code class="language-plaintext highlighter-rouge">get_lnlr_from_seq</code> calculates natural log transformed likelihood
+ratios for a given set of prior parameters and sequence of events.
+This could be provided via two sequences to compare or a single
+sequence with a dividing event index. Can also be provided with a
+window of event indices around which to do the calculations, instead
+of for a fixed dividing time.</li>
+</ul>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Calculate the ln(LR) for a given pair of counts and prior</span><span class="w">
+</span><span class="c1">#</span><span class="w">
+</span><span class="c1"># alpha: vector of length K containing the Dirichlet prior parameters</span><span class="w">
+</span><span class="c1"># r1: vector of length K containing the event counts for the known source</span><span class="w">
+</span><span class="c1"># r2: vector of length K containing the event counts for the unknown source</span><span class="w">
+</span><span class="c1">#</span><span class="w">
+</span><span class="n">calc_lnlr</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span><span class="w"> </span><span class="n">r2</span><span class="p">,</span><span class="w"> </span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NA</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+  
+  </span><span class="k">if</span><span class="p">(</span><span class="nf">length</span><span class="p">(</span><span class="n">r1</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="n">r2</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">stop</span><span class="p">(</span><span class="s2">"Different K's implied by r1 and r2."</span><span class="p">)</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+  
+  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="nf">is.na</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+    
+    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">length</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="n">r1</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="n">stop</span><span class="p">(</span><span class="s2">"Different K's implied by alpha and r1."</span><span class="p">)</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    
+    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="n">alpha</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="n">stop</span><span class="p">(</span><span class="s2">"All prior parameters need to be greater than 0."</span><span class="p">)</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    
+  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">alpha</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="n">r1</span><span class="p">))</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+  
+  </span><span class="nf">sum</span><span class="p">(</span><span class="nf">lgamma</span><span class="p">(</span><span class="n">alpha</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r2</span><span class="p">))</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nf">lgamma</span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="n">alpha</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r2</span><span class="p">))</span><span class="w"> </span><span class="o">-</span><span class="w"> 
+    </span><span class="nf">sum</span><span class="p">(</span><span class="nf">lgamma</span><span class="p">(</span><span class="n">alpha</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r1</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nf">lgamma</span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="n">alpha</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r1</span><span class="p">))</span><span class="w"> </span><span class="o">-</span><span class="w"> 
+    </span><span class="nf">sum</span><span class="p">(</span><span class="nf">lgamma</span><span class="p">(</span><span class="n">alpha</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r2</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nf">lgamma</span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="n">alpha</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">r2</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> 
+    </span><span class="nf">sum</span><span class="p">(</span><span class="nf">lgamma</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nf">lgamma</span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Calculate the ln(LR) for a given sequence of events</span><span class="w">
+</span><span class="c1">#</span><span class="w">
+</span><span class="c1"># event_seq: vector containing a sequence of events</span><span class="w">
+</span><span class="c1">#   - if event_seq2 is also specified, then event_seq consists of only the known</span><span class="w">
+</span><span class="c1">#     source events (N_1 events) and then event_seq2 will have the unknown </span><span class="w">
+</span><span class="c1">#     source events (N_2 events)</span><span class="w">
+</span><span class="c1">#   - if event_seq2 is not also specified, then this event sequence has all N</span><span class="w">
+</span><span class="c1">#     events and will be split up into N_1 + N_2 events</span><span class="w">
+</span><span class="c1"># event_seq2: optional vector containing the unknown source events</span><span class="w">
+</span><span class="c1">#   - will be used to compare against event_seq</span><span class="w">
+</span><span class="c1"># event_ind: either a single integer or a vector of integers specifying the  </span><span class="w">
+</span><span class="c1">#             event indices (i.e., N_1's) at which to calculate the LR</span><span class="w">
+</span><span class="c1">#   - if not specified with a single sequence, defaults to floor of N / 2</span><span class="w">
+</span><span class="c1">#   - if not specified with two sequences, defaults to just comparing the two</span><span class="w">
+</span><span class="c1">#     sequences</span><span class="w">
+</span><span class="c1">#   - if specified as a single integer, function will return a single LR value</span><span class="w">
+</span><span class="c1">#   - if specified as a vector, function will return a vector of LR values</span><span class="w">
+</span><span class="c1"># categories: vector of length K specifying the LR categories</span><span class="w">
+</span><span class="c1">#   - if not specified, defaults to the event types in event_seq</span><span class="w">
+</span><span class="c1">#   - note that if specified, events in event_seq not in these categories will </span><span class="w">
+</span><span class="c1">#     be ignored</span><span class="w">
+</span><span class="c1"># alpha: vector of length K containing the Dirichlet prior parameters</span><span class="w">
+</span><span class="c1">#   - if not specified, defaults to uniform Dirichlet</span><span class="w">
+</span><span class="c1">#</span><span class="w">
+</span><span class="n">get_lnlr_from_seq</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">event_seq</span><span class="p">,</span><span class="w">
+                              </span><span class="n">event_seq2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NA</span><span class="p">,</span><span class="w">
+                              </span><span class="n">event_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NA</span><span class="p">,</span><span class="w">
+                              </span><span class="n">categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NA</span><span class="p">,</span><span class="w">
+                              </span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NA</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+  
+  </span><span class="c1"># concatenate second sequence (NAs will be ignored later)</span><span class="w">
+  </span><span class="n">event_seq</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="n">event_seq</span><span class="p">,</span><span class="w"> </span><span class="n">event_seq2</span><span class="p">)</span><span class="w">
+  
+  </span><span class="c1"># treat event sequence as categorical</span><span class="w">
+  </span><span class="k">if</span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="nf">is.na</span><span class="p">(</span><span class="n">categories</span><span class="p">))</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="p">){</span><span class="w">
+    </span><span class="c1"># with specified categories, others treated as NA</span><span class="w">
+    </span><span class="n">event_seq</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">factor</span><span class="p">(</span><span class="n">event_seq</span><span class="p">,</span><span class="w"> </span><span class="n">levels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">categories</span><span class="p">)</span><span class="w">
+    
+  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="c1"># categories inferred from unique values in sequence</span><span class="w">
+    </span><span class="n">event_seq</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">factor</span><span class="p">(</span><span class="n">event_seq</span><span class="p">)</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+  
+  </span><span class="c1"># ignore empty events</span><span class="w">
+  </span><span class="n">event_seq</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">event_seq</span><span class="p">[</span><span class="o">!</span><span class="nf">is.na</span><span class="p">(</span><span class="n">event_seq</span><span class="p">)]</span><span class="w">
+  
+  </span><span class="c1"># get number of categories</span><span class="w">
+  </span><span class="n">K</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="n">levels</span><span class="p">(</span><span class="n">event_seq</span><span class="p">))</span><span class="w">
+  </span><span class="c1"># get number of events</span><span class="w">
+  </span><span class="n">N</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="n">event_seq</span><span class="p">)</span><span class="w">
+  
+  </span><span class="c1"># error check inputs</span><span class="w">
+  </span><span class="k">if</span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="nf">is.na</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+    
+    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">length</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">K</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="n">stop</span><span class="p">(</span><span class="s2">"The number of prior parameters is not equal to the number of categories."</span><span class="p">)</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    
+    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="n">alpha</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="n">stop</span><span class="p">(</span><span class="s2">"All prior parameters need to be greater than 0."</span><span class="p">)</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    
+  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">alpha</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">K</span><span class="p">)</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+  
+  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="nf">is.na</span><span class="p">(</span><span class="n">event_ind</span><span class="p">))</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+    
+    </span><span class="k">if</span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="n">event_ind</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="n">stop</span><span class="p">(</span><span class="s2">"There are event indices less than 1."</span><span class="p">)</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    
+    </span><span class="k">if</span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="n">event_ind</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">N</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="m">1</span><span class="p">))</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="n">stop</span><span class="p">(</span><span class="s2">"There are event indices greater than the length of the event sequence."</span><span class="p">)</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+    
+    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">sum</span><span class="p">(</span><span class="nf">is.na</span><span class="p">(</span><span class="n">event_seq2</span><span class="p">))</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="n">event_ind</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="n">event_seq2</span><span class="p">)</span><span class="w">
+    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="n">event_ind</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">floor</span><span class="p">(</span><span class="n">N</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="m">2</span><span class="p">)</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    
+  </span><span class="p">}</span><span class="w">
+  
+  </span><span class="c1"># vector to store ln(LR) vals</span><span class="w">
+  </span><span class="n">lnlr</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="kc">NA</span><span class="p">,</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="n">event_ind</span><span class="p">))</span><span class="w">
+  
+  </span><span class="c1"># calculate for all event indices specified</span><span class="w">
+  </span><span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span><span class="o">:</span><span class="nf">length</span><span class="p">(</span><span class="n">event_ind</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">r1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">table</span><span class="p">(</span><span class="n">event_seq</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="n">event_ind</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span><span class="w">
+    </span><span class="n">r2</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">table</span><span class="p">(</span><span class="n">event_seq</span><span class="p">[(</span><span class="n">event_ind</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="o">:</span><span class="n">N</span><span class="p">])</span><span class="w">
+    </span><span class="n">lnlr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">calc_lnlr</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span><span class="w"> </span><span class="n">r2</span><span class="p">,</span><span class="w"> </span><span class="n">alpha</span><span class="p">)</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+  
+  </span><span class="n">lnlr</span><span class="w">
+  
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="toy-examples">Toy examples</h2>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">set.seed</span><span class="p">(</span><span class="kc">NULL</span><span class="p">)</span><span class="w">
+</span><span class="n">set.seed</span><span class="p">(</span><span class="m">1234</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Let’s consider three event types of interest, “A”, “B”, and “C”.</p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">toy_categories</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"B"</span><span class="p">,</span><span class="w"> </span><span class="s2">"C"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Suppose we have identical event counts,
+<em>r</em><sub>1</sub> = <em>r</em><sub>2</sub> = (2, 1, 0). We can use the
+<code class="language-plaintext highlighter-rouge">calc_lnlr</code> function in order to calculate the likelihood ratio using
+these counts directly.</p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">exp</span><span class="p">(</span><span class="n">calc_lnlr</span><span class="p">(</span><span class="w">
+  </span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">),</span><span class="w">
+  </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">),</span><span class="w"> 
+  </span><span class="n">r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">))</span><span class="w">
+</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## [1] 2.142857
+</code></pre></div></div>
+
+<p>We could also represent these counts as two sequences and then calculate
+the likelihood ratio.</p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">exp</span><span class="p">(</span><span class="n">get_lnlr_from_seq</span><span class="p">(</span><span class="w">
+  </span><span class="n">event_seq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"B"</span><span class="p">),</span><span class="w">
+  </span><span class="n">event_seq2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"B"</span><span class="p">),</span><span class="w">
+  </span><span class="n">categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toy_categories</span><span class="p">)</span><span class="w">
+</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## [1] 2.142857
+</code></pre></div></div>
+
+<p>Or alternatively as a single sequence with a specified dividing index.</p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">exp</span><span class="p">(</span><span class="n">get_lnlr_from_seq</span><span class="p">(</span><span class="w">
+  </span><span class="n">event_seq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"B"</span><span class="p">),</span><span class="w"> </span><span class="m">2</span><span class="p">),</span><span class="w">
+  </span><span class="n">categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toy_categories</span><span class="p">,</span><span class="w">
+  </span><span class="n">event_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span><span class="p">)</span><span class="w">
+</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## [1] 2.142857
+</code></pre></div></div>
+
+<p>We could also evaluate the likelihood ratio throughout a window of
+events in the sequence, instead of only at a fixed event index. The
+function below calculates the likelihood ratio three times on the
+sequence: “A”, “A”, “B”, “A”, “A”, “B”.</p>
+
+<ul>
+  <li>A, A VS. B, A, A, B</li>
+  <li>A, A, B VS. A, A, B</li>
+  <li>A, A, B, A, VS. A, B</li>
+</ul>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">exp</span><span class="p">(</span><span class="n">get_lnlr_from_seq</span><span class="p">(</span><span class="w">
+  </span><span class="n">event_seq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"A"</span><span class="p">,</span><span class="w"> </span><span class="s2">"B"</span><span class="p">),</span><span class="w"> </span><span class="m">2</span><span class="p">),</span><span class="w">
+  </span><span class="n">categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toy_categories</span><span class="p">,</span><span class="w">
+  </span><span class="n">event_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="m">4</span><span class="p">))</span><span class="w">
+</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## [1] 1.285714 2.142857 1.714286
+</code></pre></div></div>
+
+<p>We can also do this for a longer sequence and then plot the resulting
+likelihood ratios across the event indices. We construct a sequence of
+1000 events; the first 500 will be mostly “A” events and then there’s a
+change and the second 500 events will be mostly “C” events. Ideally, the
+likelihood ratio demonstrates that there is a change around the 500th
+event.</p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">long_seq</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="w">
+  </span><span class="n">toy_categories</span><span class="p">[</span><span class="n">sample</span><span class="p">(</span><span class="n">seq</span><span class="p">(</span><span class="m">3</span><span class="p">),</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">500</span><span class="p">,</span><span class="w"> </span><span class="n">prob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">0.9</span><span class="p">,</span><span class="w"> </span><span class="m">0.05</span><span class="p">,</span><span class="w"> </span><span class="m">0.05</span><span class="p">),</span><span class="w"> </span><span class="n">replace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)],</span><span class="w">
+  </span><span class="n">toy_categories</span><span class="p">[</span><span class="n">sample</span><span class="p">(</span><span class="n">seq</span><span class="p">(</span><span class="m">3</span><span class="p">),</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">500</span><span class="p">,</span><span class="w"> </span><span class="n">prob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">0.05</span><span class="p">,</span><span class="w"> </span><span class="m">0.05</span><span class="p">,</span><span class="w"> </span><span class="m">0.9</span><span class="p">),</span><span class="w"> </span><span class="n">replace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)]</span><span class="w">
+</span><span class="p">)</span><span class="w">
+
+</span><span class="n">lnlr</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">get_lnlr_from_seq</span><span class="p">(</span><span class="w">
+  </span><span class="n">event_seq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">long_seq</span><span class="p">,</span><span class="w">
+  </span><span class="n">categories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toy_categories</span><span class="p">,</span><span class="w">
+  </span><span class="n">event_ind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">999</span><span class="p">)</span><span class="w">
+</span><span class="p">)</span><span class="w">
+
+</span><span class="n">plot</span><span class="p">(</span><span class="n">seq</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">999</span><span class="p">),</span><span class="w"> </span><span class="n">lnlr</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"l"</span><span class="p">,</span><span class="w"> </span><span class="n">lwd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">xlab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Event index"</span><span class="p">,</span><span class="w"> </span><span class="n">ylab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ln(LR)"</span><span class="p">)</span><span class="w">
+</span><span class="n">abline</span><span class="p">(</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">500</span><span class="p">,</span><span class="w"> </span><span class="n">lwd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"red"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="categorical_count_lr_files/figure-gfm/lr_plot-1.png" alt="" /><!-- --></p>

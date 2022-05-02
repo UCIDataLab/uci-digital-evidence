@@ -44,11 +44,17 @@ calc_lnlr <- function(r1, r2, alpha = NA) {
   }
   
   if (sum(is.na(alpha)) == 0) {
-    alpha <- rep(1, length(r1))
-  } else {
+    
     if (length(alpha) != length(r1)) {
       stop("Different K's implied by alpha and r1.")
     }
+    
+    if (sum(alpha <= 0) > 0) {
+      stop("All prior parameters need to be greater than 0.")
+    }
+    
+  } else {
+    alpha <- rep(1, length(r1))
   }
   
   sum(lgamma(alpha + r1 + r2)) - lgamma(sum(alpha + r1 + r2)) - 
@@ -89,19 +95,28 @@ get_lnlr_from_seq <- function(event_seq,
                               categories = NA,
                               alpha = NA) {
   
+  # concatenate second sequence (NAs will be ignored later)
   event_seq <- c(event_seq, event_seq2)
   
+  # treat event sequence as categorical
   if(sum(is.na(categories)) == 0){
+    # with specified categories, others treated as NA
     event_seq <- factor(event_seq, levels = categories)
     
   } else {
+    # categories inferred from unique values in sequence
     event_seq <- factor(event_seq)
   }
   
+  # ignore empty events
   event_seq <- event_seq[!is.na(event_seq)]
+  
+  # get number of categories
   K <- length(levels(event_seq))
+  # get number of events
   N <- length(event_seq)
   
+  # error check inputs
   if(sum(is.na(alpha)) == 0) {
     
     if (length(alpha) != K) {
@@ -135,8 +150,10 @@ get_lnlr_from_seq <- function(event_seq,
     
   }
   
+  # vector to store ln(LR) vals
   lnlr <- rep(NA, length(event_ind))
   
+  # calculate for all event indices specified
   for(i in 1:length(event_ind)) {
     r1 <- table(event_seq[1:event_ind[i]])
     r2 <- table(event_seq[(event_ind[i] + 1):N])

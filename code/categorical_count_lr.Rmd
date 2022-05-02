@@ -1,8 +1,3 @@
----
-title: Sample Code for Likelihood Ratios for Categorical Count Data
-output: rmarkdown::github_document
----
-
 ## LR under the proposed model
 
 ```{r setup, echo=FALSE}
@@ -94,19 +89,28 @@ get_lnlr_from_seq <- function(event_seq,
                               categories = NA,
                               alpha = NA) {
   
+  # concatenate second sequence (NAs will be ignored later)
   event_seq <- c(event_seq, event_seq2)
   
+  # treat event sequence as categorical
   if(sum(is.na(categories)) == 0){
+    # with specified categories, others treated as NA
     event_seq <- factor(event_seq, levels = categories)
     
   } else {
+    # categories inferred from unique values in sequence
     event_seq <- factor(event_seq)
   }
   
+  # ignore empty events
   event_seq <- event_seq[!is.na(event_seq)]
+  
+  # get number of categories
   K <- length(levels(event_seq))
+  # get number of events
   N <- length(event_seq)
   
+  # error check inputs
   if(sum(is.na(alpha)) == 0) {
     
     if (length(alpha) != K) {
@@ -140,8 +144,10 @@ get_lnlr_from_seq <- function(event_seq,
     
   }
   
+  # vector to store ln(LR) vals
   lnlr <- rep(NA, length(event_ind))
   
+  # calculate for all event indices specified
   for(i in 1:length(event_ind)) {
     r1 <- table(event_seq[1:event_ind[i]])
     r2 <- table(event_seq[(event_ind[i] + 1):N])
