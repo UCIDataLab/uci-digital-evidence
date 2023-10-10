@@ -3,7 +3,7 @@ layout: page
 permalink: /papers/
 title: Papers
 description: (*) denotes equal contribution
-years: [2020, 2017]
+years: [2022, 2020, 2017]
 ---
 
 <div class="publications">
