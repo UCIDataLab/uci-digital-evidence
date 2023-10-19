@@ -5,4 +5,4 @@
 
 ## Sample code for likelihood ratios for categorical events with an unknown changepoint
 
-* * `unknown_changepoint_count_lr.Rmd` is an R notebook which walks through sample code for calculating likelihood ratios for categorical event data with an unknown changepoint (`unknown_changepoint_count_lr.md` should render the Rmd file for easier reading in GitHub)
+* `unknown_changepoint_count_lr.Rmd` is an R notebook which walks through sample code for calculating likelihood ratios for categorical event data with an unknown changepoint (`unknown_changepoint_count_lr.md` should render the Rmd file for easier reading in GitHub)
