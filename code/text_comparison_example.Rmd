@@ -1,0 +1,169 @@
+---
+title: Example of Categorical Count Likelihood Ratio in Forensic Text Comparison
+output: rmarkdown::github_document
+---
+
+The goal of this document is to demonstrate a simple application of the categorical count likelihood ratio (LR) to a forensic text comparison use case.
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Below we reproduce the function which calculates the categorical count LR from the `categorical_count_lr.Rmd` file.
+
+```{r calc-lnlr}
+
+# Calculate the ln(LR) for a given pair of counts and prior
+#
+# alpha: vector of length K containing the Dirichlet prior parameters
+# r1: vector of length K containing the event counts for the known source
+# r2: vector of length K containing the event counts for the unknown source
+#
+calc_lnlr <- function(r1, r2, alpha = NA) {
+  
+  if(length(r1) != length(r2)) {
+    stop("Different K's implied by r1 and r2.")
+  }
+  
+  if (sum(is.na(alpha)) == 0) {
+    
+    if (length(alpha) != length(r1)) {
+      stop("Different K's implied by alpha and r1.")
+    }
+    
+    if (sum(alpha <= 0) > 0) {
+      stop("All prior parameters need to be greater than 0.")
+    }
+    
+  } else {
+    alpha <- rep(1, length(r1))
+  }
+  
+  sum(lgamma(alpha + r1 + r2)) - lgamma(sum(alpha + r1 + r2)) - 
+    sum(lgamma(alpha + r1)) + lgamma(sum(alpha + r1)) - 
+    sum(lgamma(alpha + r2)) + lgamma(sum(alpha + r2)) + 
+    sum(lgamma(alpha)) - lgamma(sum(alpha))
+}
+
+```
+
+To make working with the text data easier, we'll load a few helpful libraries.
+
+```{r, message=FALSE}
+library(tidyverse)
+library(quanteda)
+```
+
+Let's create a data frame with some sample texts.
+
+```{r}
+text1 <- "I enjoyed the movie. If you like action movies, it is a good buy. It was funny, and if Harrison Ford is your favorite actor, you must have it."
+text2 <- "I found the product useful. If you are having trouble keeping your windows clean, it will certainly help you. It works as advertised, and if you find yourself debating buying this, I would recommend going for it."
+text3 <- "This was a great movie!!! Harrison Ford is great in this movie!!! Need to have more movies like this!!!"
+
+text_df <- data.frame(user = c("A", "A", "B"), text_id = c(1, 2, 1), text = c(text1, text2, text3))
+knitr::kable(text_df)
+```
+
+In our toy data, the first two texts were written by the same user, "A", while the third text was written by a different user, "B."
+
+We can use the `quanteda` library to convert the dataframe into a quanteda corpus, which will let us take advantage of quanteda's features.
+
+```{r}
+text_corpus <- corpus(x = text_df, text_field = "text")
+```
+
+First, we'll count the stop words using quanteda's built-in list, available via `stopwords("en")`.
+
+```{r}
+stop_word_counts <- text_corpus %>% 
+  tokens(split_hyphens = T) %>% 
+  tokens_split(separator = ".", remove_separator = FALSE) %>% 
+  tokens_select(pattern = stopwords("en"), selection = "keep") %>% 
+  dfm() %>% 
+  convert(to = "data.frame")
+```
+
+Next, we'll also count the punctuation. So that we don't double-count punctuation that may be in the stop words, we first remove those and then count the remaining punctuation. We use these two features because stop words (or function words) and punctuation usage have been found to be useful stylometric features to measure of text.
+
+```{r}
+# then remove the stop words and count anything else we might to count and convert to a df
+punct_counts <- text_corpus %>% 
+  tokens(split_hyphens = T) %>%
+  tokens_select(pattern = stopwords("en"), selection = "remove") %>% 
+  tokens_split(separator = ".", remove_separator = FALSE) %>%
+  tokens_split(separator = "_", remove_separator = FALSE) %>%
+  tokens_split(separator = "/", remove_separator = FALSE) %>%
+  tokens_split(separator = "!", remove_separator = FALSE) %>%
+  tokens_split(separator = "\"", remove_separator = FALSE) %>%
+  tokens_split(separator = "#", remove_separator = FALSE) %>%
+  tokens_split(separator = "$", remove_separator = FALSE) %>%
+  tokens_split(separator = "%", remove_separator = FALSE) %>%
+  tokens_split(separator = "&", remove_separator = FALSE) %>%
+  tokens_split(separator = "'", remove_separator = FALSE) %>%
+  tokens_split(separator = "(", remove_separator = FALSE) %>%
+  tokens_split(separator = ")", remove_separator = FALSE) %>%
+  tokens_split(separator = "*", remove_separator = FALSE) %>%
+  tokens_split(separator = "+", remove_separator = FALSE) %>%
+  tokens_split(separator = ",", remove_separator = FALSE) %>%
+  tokens_split(separator = ":", remove_separator = FALSE) %>%
+  tokens_split(separator = ";", remove_separator = FALSE) %>%
+  tokens_split(separator = "<", remove_separator = FALSE) %>%
+  tokens_split(separator = "=", remove_separator = FALSE) %>%
+  tokens_split(separator = ">", remove_separator = FALSE) %>%
+  tokens_split(separator = "?", remove_separator = FALSE) %>%
+  tokens_split(separator = "@", remove_separator = FALSE) %>%
+  tokens_split(separator = "[", remove_separator = FALSE) %>%
+  tokens_split(separator = "\\", remove_separator = FALSE) %>%
+  tokens_split(separator = "^", remove_separator = FALSE) %>%
+  tokens_split(separator = "{", remove_separator = FALSE) %>%
+  tokens_split(separator = "|", remove_separator = FALSE) %>%
+  tokens_split(separator = "}", remove_separator = FALSE) %>%
+  tokens_split(separator = "~", remove_separator = FALSE) %>%
+  tokens_split(separator = "-", remove_separator = FALSE) %>%
+  tokens_select(pattern = c(".", "_", "/", "!", "\"", "#", "$", "%", "&", "'",
+                            "(", ")", "*", "+", ",", ":", ";", "<", "=", ">",
+                            "?", "@", "[", "\\", "^", "{", "|", "}", "~", "-"), 
+                valuetype = "fixed", 
+                selection = "keep") %>% 
+  dfm() %>% 
+  convert(to = "data.frame")
+```
+
+We'll then combine these two dataframes into a single dataframe which contains three rows for the three pieces of text and the columns correspond to the counts of stop words and punctuation for each text.
+
+```{r}
+# cbind the dataframes
+text_counts <- cbind(text_df %>% select(user, text_id), 
+                      stop_word_counts[, 2:ncol(stop_word_counts)], 
+                      punct_counts[, 2:ncol(punct_counts)])
+features_ind <- 3:ncol(text_counts)
+knitr::kable(text_counts)
+```
+
+Let's first calculate the LR (natural-log transformed) for the two texts by author A.
+
+```{r}
+calc_lnlr(r1 = unlist(text_counts[(text_counts$user == "A" & text_counts$text_id == 1), features_ind]),
+          r2 = unlist(text_counts[(text_counts$user == "A" & text_counts$text_id == 2), features_ind]))
+```
+
+We can see that the natural-log transformed LR is greater than 0 (or greater than 1, untransformed), indicating that the evidence is more probable if these two texts came from the same author.
+
+We can do the same thing, comparing the texts by author B to each text from author A. Since these texts are by different authors, we'd like to see an LR less than 1 (less than 0 with the natural-log transformation).
+```{r}
+calc_lnlr(r1 = unlist(text_counts[(text_counts$user == "A" & text_counts$text_id == 1), features_ind]),
+          r2 = unlist(text_counts[(text_counts$user == "B" & text_counts$text_id == 1), features_ind]))
+```
+
+```{r}
+calc_lnlr(r1 = unlist(text_counts[(text_counts$user == "A" & text_counts$text_id == 2), features_ind]),
+          r2 = unlist(text_counts[(text_counts$user == "B" & text_counts$text_id == 1), features_ind]))
+```
+
+We could also combine the counts from the two texts by author A, so that we have more data for A incorporated into a single comparison. Having more data on which to base our calculation leads to stronger values of the LR (i.e., further away from 1, or from 0 if log-transformed). This can be seen from the more extreme value of the LR we get below.
+
+```{r}
+calc_lnlr(r1 = unlist(text_counts[(text_counts$user == "A" & text_counts$text_id == 1), features_ind]) +
+            unlist(text_counts[(text_counts$user == "A" & text_counts$text_id == 2), features_ind]),
+          r2 = unlist(text_counts[(text_counts$user == "B" & text_counts$text_id == 1), features_ind]))
+```
