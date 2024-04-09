@@ -93,6 +93,7 @@ GEM
 PLATFORMS
   universal-darwin-20
   universal-darwin-21
+  universal-darwin-22
 
 DEPENDENCIES
   bundler
@@ -101,4 +102,4 @@ DEPENDENCIES
   webrick
 
 BUNDLED WITH
-   2.2.32
+   2.3.4
