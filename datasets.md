@@ -11,12 +11,14 @@ Below is a list of real-world datasets relevant to digital evidence that are use
 3. [Device location pings](#device-location-pings)
 4. [Web browsing](#web-browsing)
 5. [Authentication](#authentication)
+6. [Amazon product reviews](#amazon-product-reviews)
+7. [Reddit comments](#reddit-comments)
 
 ### Email communications
 
 The email-Eu-core-temporal network dataset comes from the <a href="https://snap.stanford.edu/index.html">Stanford Network Analysis Project</a> and consists of ~300,000 emails sent from October 2003 through May 2005. A row in the dataset is of the form `<sender_id, recipient_id, timestamp>` where the sender and recipient IDs identify the users who sent and received the emails, respectively, and the timestamp is the time at which the email was sent.
 
-_References_:
+References:
 
 * <a href="https://snap.stanford.edu/index.html">Stanford Network Analysis Project</a>
 * <a href="https://snap.stanford.edu/data/email-Eu-core-temporal.html">email-Eu-core-temporal dataset</a>
@@ -74,4 +76,37 @@ References:
 * Canonical reference for this dataset:
 
 >Kent, Alexander D. "User-computer authentication associations in time." Los Alamos National Laboratory (2014).
+
+### Amazon product reviews
+
+This dataset is composed of 10,000 product reviews from 2000 Amazon accounts between 1996 and 2014. The dataset is organized into authorship verification cases, in which each case has texts from a known account and one text from an unknown account. The goal is to determine if the text from the unknown account came from the same account as the known-account texts. The text of a review reviews a product in one of 17 product categories, and documents by the same user were taken across different categories so that each verification case is of mixed topic.
+
+References:
+* Data available <a href="https://www.dropbox.com/sh/qelav1ap0uwo82q/AABb5f5FrfTjn3tUKB9cOhZia/English?dl=0&subfolder_nav_tracking=1">here</a>
+* Associated publications:
+
+> Halvani, Oren, Lukas Graner, and Roey Regev. "TAVeer: an interpretable topic-agnostic authorship verification method." Proceedings of the 15th International Conference on Availability, Reliability and Security. 2020.  <a href="https://doi.org/10.1145/3407023.3409194">https://doi.org/10.1145/3407023.3409194</a>
+
+> Halvani, Oren, Lukas Graner, and Roey Regev. "A step towards interpretable authorship verification." arXiv preprint arXiv:2006.12418 (2020).<a href="https://doi.org/10.48550/arXiv.2006.12418">https://doi.org/10.48550/arXiv.2006.12418</a>
+
+This dataset is derived from the Amazon product data corpus, which is available at: <a href="https://nijianmo.github.io/amazon/index.html">https://nijianmo.github.io/amazon/index.html</a> and is discussed in the associated publication found below.
+
+> Ni, Jianmo, Jiacheng Li, and Julian McAuley. "Justifying recommendations using distantly-labeled reviews and fined-grained aspects." Empirical Methods in Natural Language Processing (EMNLP), 2019.
+
+
+### Reddit comments
+
+This dataset is composed of 4000 Reddit comments from 1000 users between 2010 to 2016. The dataset is organized into authorship verification cases, in which each case has texts from a known account and one text from an unknown account. The goal is to determine if the text from the unknown account came from the same account as the known-account texts. The comments which comprise the known-account texts were taken from disjoint subreddits such that each case is of mixed topic.
+
+References:
+* Data available <a href="https://www.doi.org/10.17632/hppkn5kbg8.1">here</a>
+* Associated publications:
+
+> Halvani, Oren (2016), “Reddit Cross-Topic Authorship Verification Corpus”, Mendeley Data, V1, doi: 10.17632/hppkn5kbg8.1
+
+> Halvani, Oren, Lukas Graner, and Roey Regev. "TAVeer: an interpretable topic-agnostic authorship verification method." Proceedings of the 15th International Conference on Availability, Reliability and Security. 2020.  <a href="https://doi.org/10.1145/3407023.3409194">https://doi.org/10.1145/3407023.3409194</a>
+
+> Halvani, Oren, Lukas Graner, and Roey Regev. "A step towards interpretable authorship verification." arXiv preprint arXiv:2006.12418 (2020).<a href="https://doi.org/10.48550/arXiv.2006.12418">https://doi.org/10.48550/arXiv.2006.12418</a>
+
+
 
